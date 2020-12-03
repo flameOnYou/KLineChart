@@ -37,7 +37,7 @@ export const DrawActionType = {
 }
 
 const MAX_DATA_SPACE = 50
-const MIN_DATA_SPACE = 3
+const MIN_DATA_SPACE = 0.00001
 
 export default class ChartData {
   constructor (styleOptions, invalidateHandler) {
