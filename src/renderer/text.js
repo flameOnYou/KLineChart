@@ -12,16 +12,15 @@
  * limitations under the License.
  */
 
-import Widget from './Widget'
-import YAxisView from '../view/YAxisView'
-import YAxisCrosshairView from '../view/YAxisCrosshairView'
-
-export default class YAxisWidget extends Widget {
-  _createMainView (container, props) {
-    return new YAxisView(container, props.chartData, props.yAxis, props.additionalDataProvider)
-  }
-
-  _createCrosshairView (container, props) {
-    return new YAxisCrosshairView(container, props.chartData, props.yAxis, props.additionalDataProvider)
-  }
+/**
+ * 绘制文字
+ * @param ctx
+ * @param color
+ * @param x
+ * @param y
+ * @param text
+ */
+export function renderText (ctx, color, x, y, text) {
+  ctx.fillStyle = color
+  ctx.fillText(text, x, y)
 }

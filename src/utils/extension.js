@@ -12,16 +12,12 @@
  * limitations under the License.
  */
 
-import Widget from './Widget'
-import YAxisView from '../view/YAxisView'
-import YAxisCrosshairView from '../view/YAxisCrosshairView'
+/* eslint-disable no-extend-native */
 
-export default class YAxisWidget extends Widget {
-  _createMainView (container, props) {
-    return new YAxisView(container, props.chartData, props.yAxis, props.additionalDataProvider)
-  }
-
-  _createCrosshairView (container, props) {
-    return new YAxisCrosshairView(container, props.chartData, props.yAxis, props.additionalDataProvider)
-  }
+/**
+ * 数字扩展，获取数组最后一个数据
+ * @return {*}
+ */
+Array.prototype.last = function () {
+  return this[this.length - 1]
 }

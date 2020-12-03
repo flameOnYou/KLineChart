@@ -1,5 +1,11 @@
 export declare type GraphicMarkType = 'none' | 'horizontalStraightLine' | 'verticalStraightLine' | 'straightLine' | 'horizontalRayLine' | 'verticalRayLine' | 'rayLine' | 'horizontalSegmentLine' | 'verticalSegmentLine' | 'segmentLine' | 'priceLine' | 'priceChannelLine' | 'parallelStraightLine' | 'fibonacciLine';
-export declare type ChartType = 'candle_stick' | 'real_time';
+export declare type PaneType = 'technicalIndicator'
+
+export declare interface PaneOptions {
+  technicalIndicatorType?: string;
+  height?: number;
+  dragEnabled?: boolean;
+}
 
 export declare interface KLineData {
   open: number;
@@ -13,9 +19,11 @@ export declare interface KLineData {
 
 export declare type PictureType = 'png' | 'jpeg' | 'bmp';
 
+export declare type PlotType = 'circle' | 'bar' | 'line';
+
 export declare interface TechnicalIndicatorInfoPlot {
   key: string;
-  type?: 'circle' | 'bar' | 'line';
+  type?: PlotType;
   color?: (data: any, options?: any) => string;
   isStroke?: (data: any) => boolean;
 }
@@ -58,7 +66,7 @@ export declare interface TechnicalIndicatorInfo {
     dataSource: TechnicalIndicatorCustomRenderDataSource,
     viewport: TechnicalIndicatorCustomRenderViewport,
     styleOptions: any, xAxis: Axis, yAxis: Axis,
-    isCandleStickTechnicalIndicator: boolean
+    isCandleTechnicalIndicator: boolean
   ) => void
 }
 
@@ -67,12 +75,13 @@ export declare type DrawActionType = 'drawCandle' | 'drawTechnicalIndicator'
 export declare interface DrawActionCallbackParams {
   ctx: CanvasRenderingContext2D;
   kLineData: KLineData;
+  dataIndex: number;
   technicalIndicatorData?: any
   technicalIndicatorType?: string
   coordinate: any;
   barSpace: number;
   halfBarSpace: number;
-  isCandleStick: boolean;
+  isCandle: boolean;
 }
 
 export declare interface Chart {
@@ -80,11 +89,15 @@ export declare interface Chart {
   getStyleOptions(): any;
   setTechnicalIndicatorParams(technicalIndicatorType: string, params: number[]): void;
   getTechnicalIndicatorParams(technicalIndicatorType?: string): any;
-  setPrecision(pricePrecision: number, volumePrecision: number): void;
+  setPriceVolumePrecision(pricePrecision: number, volumePrecision: number): void;
   setTechnicalIndicatorPrecision(precision: number, technicalIndicatorType?: string): void;
   setTimezone(timezone: string): void;
   getTimezone(): string;
   resize(): void;
+  setZoomEnabled(enabled: boolean): void;
+  isZoomEnabled(): boolean;
+  setScrollEnabled(enabled: boolean): void;
+  isScrollEnabled(): boolean;
   setOffsetRightSpace(space: number): void;
   setLeftMinVisibleBarCount(barCount: number): void;
   setRightMinVisibleBarCount(barCount: number): void;
@@ -95,16 +108,15 @@ export declare interface Chart {
   applyMoreData(dataList: KLineData[], more?: boolean): void;
   updateData(data: KLineData): void;
   loadMore(cb: (timestamp: number) => void): void;
-  setCandleStickChartType(chartType: ChartType): void;
-  setCandleStickTechnicalIndicatorType(technicalIndicatorType: string): void;
-  setTechnicalIndicatorType(tag: string, technicalIndicatorType: string): void;
-  createTechnicalIndicator(technicalIndicatorType: string, height?: number, dragEnabled?: boolean): string | null;
+  setTechnicalIndicatorType(technicalIndicatorType: string, isStack?: boolean, paneId?: string): void;
+  getTechnicalIndicatorType(paneId?: string): string[];
+  createPane(type?: PaneType, options?: PaneOptions): string | null;
   addCustomTechnicalIndicator(technicalIndicatorInfo: TechnicalIndicatorInfo)
-  removeTechnicalIndicator(tag: string): void;
+  removeTechnicalIndicator(technicalIndicatorType?: string, paneId?: string): void;
   addGraphicMark(graphicMarkType: GraphicMarkType): void;
   removeAllGraphicMark(): void;
-  subscribeDrawAction (type: DrawActionType, callback: (params: DrawActionCallbackParams) => void);
-  unsubscribeDrawAction (type: DrawActionType, callback: (params: DrawActionCallbackParams) => void);
+  subscribeDrawAction (type: DrawActionType, callback: (params: DrawActionCallbackParams) => void): void;
+  unsubscribeDrawAction (type: DrawActionType, callback: (params: DrawActionCallbackParams) => void): void;
   getConvertPictureUrl(includeFloatLayer?: boolean, includeGraphicMark?: boolean, type?: PictureType, backgroundColor?: string): string;
 }
 

@@ -49,6 +49,11 @@ export default class ChartData {
     // 所有技术指标映射
     this._technicalIndicatorMapping = createTechnicalIndicatorMapping()
 
+    // 是否可以缩放
+    this._zoomEnabled = true
+    // 是否可以拖拽滑动
+    this._scrollEnabled = true
+
     // 价格精度
     this._pricePrecision = 2
     // 数量精度
@@ -90,7 +95,7 @@ export default class ChartData {
     this._to = 0
 
     // 十字光标信息
-    this._crossHair = {}
+    this._crosshair = {}
     // 用来记录开始拖拽时向右偏移的数量
     this._preOffsetRightBarCount = 0
 
@@ -242,11 +247,11 @@ export default class ChartData {
   }
 
   /**
-   * 加载精度
+   * 加载价格和数量精度
    * @param pricePrecision
    * @param volumePrecision
    */
-  applyPrecision (pricePrecision, volumePrecision) {
+  applyPriceVolumePrecision (pricePrecision, volumePrecision) {
     this._pricePrecision = pricePrecision
     this._volumePrecision = volumePrecision
     for (const name in this._technicalIndicatorMapping) {
@@ -426,25 +431,25 @@ export default class ChartData {
    * 获取十字光标信息
    * @returns {{}}
    */
-  crossHair () {
-    return this._crossHair
+  crosshair () {
+    return this._crosshair
   }
 
   /**
    * 设置十字光标点所在的pane的标识
    * @param point
-   * @param paneTag
+   * @param paneId
    */
-  setCrossHairPointPaneTag (point, paneTag) {
-    const crossHair = {}
+  setCrosshairPointPaneId (point, paneId) {
+    const crosshair = {}
     if (point) {
-      crossHair.x = point.x
-      crossHair.y = point.y
-      crossHair.paneTag = this._crossHair.paneTag
+      crosshair.x = point.x
+      crosshair.y = point.y
+      crosshair.paneId = this._crosshair.paneId
     }
-    if (paneTag !== undefined) {
-      crossHair.paneTag = paneTag
-      this._crossHair = crossHair
+    if (paneId !== undefined) {
+      crosshair.paneId = paneId
+      this._crosshair = crosshair
       this.invalidate(InvalidateLevel.FLOAT_LAYER)
     }
   }
@@ -461,6 +466,9 @@ export default class ChartData {
    * @param distance
    */
   scroll (distance) {
+    if (!this._scrollEnabled) {
+      return
+    }
     const distanceBarCount = distance / this._dataSpace
     this._offsetRightBarCount = this._preOffsetRightBarCount - distanceBarCount
     this.adjustOffsetBarCount()
@@ -509,8 +517,11 @@ export default class ChartData {
    * @param point
    */
   zoom (scale, point) {
+    if (!this._zoomEnabled) {
+      return
+    }
     if (!point || isValid(point.x)) {
-      point = { x: isValid(this._crossHair.x) ? this._crossHair.x : this._totalDataSpace / 2 }
+      point = { x: isValid(this._crosshair.x) ? this._crosshair.x : this._totalDataSpace / 2 }
     }
     const floatIndexAtZoomPoint = this.coordinateToFloatIndex(point.x)
     const dataSpace = this._dataSpace + scale * (this._dataSpace / 10)
@@ -561,6 +572,38 @@ export default class ChartData {
   }
 
   /**
+   * 设置是否可以缩放
+   * @param enabled
+   */
+  setZoomEnabled (enabled) {
+    this._zoomEnabled = enabled
+  }
+
+  /**
+   * 获取是否可以缩放
+   * @return {boolean}
+   */
+  zoomEnabled () {
+    return this._zoomEnabled
+  }
+
+  /**
+   * 设置是否可以拖拽滚动
+   * @param enabled
+   */
+  setScrollEnabled (enabled) {
+    this._scrollEnabled = enabled
+  }
+
+  /**
+   * 获取是否可以拖拽滚动
+   * @return {boolean}
+   */
+  scrollEnabled () {
+    return this._scrollEnabled
+  }
+
+  /**
    * 设置加载更多
    * @param callback
    */
@@ -583,7 +626,7 @@ export default class ChartData {
    * @param graphicMark
    */
   addGraphicMark (graphicMark) {
-    const lastGraphicMark = this._graphicMarks[this._graphicMarks.length - 1]
+    const lastGraphicMark = this._graphicMarks.last()
     if (lastGraphicMark && lastGraphicMark.isDrawing()) {
       this._graphicMarks[this._graphicMarks.length - 1] = graphicMark
     } else {

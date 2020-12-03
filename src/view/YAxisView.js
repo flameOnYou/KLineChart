@@ -14,9 +14,12 @@
 
 import View, { PlotType } from './View'
 import { YAxisPosition } from '../data/options/styleOptions'
-import { calcTextWidth, drawHorizontalLine, drawVerticalLine, getFont } from '../utils/canvas'
+import { calcTextWidth, createFont } from '../utils/canvas'
+import { renderHorizontalLine, renderVerticalLine } from '../renderer/line'
 import { formatBigNumber, formatPrecision } from '../utils/format'
 import { isValid } from '../utils/typeChecks'
+import { renderFillRect } from '../renderer/rect'
+import { renderText } from '../renderer/text'
 
 export default class YAxisView extends View {
   constructor (container, chartData, yAxis, additionalDataProvider) {
@@ -27,7 +30,7 @@ export default class YAxisView extends View {
 
   _draw () {
     const yAxisOptions = this._chartData.styleOptions().yAxis
-    if (yAxisOptions.display) {
+    if (yAxisOptions.show) {
       this._drawAxisLine(yAxisOptions)
       this._drawTickLines(yAxisOptions)
       this._drawTickLabels(yAxisOptions)
@@ -38,7 +41,7 @@ export default class YAxisView extends View {
 
   _drawAxisLine (yAxisOptions) {
     const axisLine = yAxisOptions.axisLine
-    if (!axisLine.display) {
+    if (!axisLine.show) {
       return
     }
     this._ctx.strokeStyle = axisLine.color
@@ -49,12 +52,12 @@ export default class YAxisView extends View {
     } else {
       x = this._width - 1
     }
-    drawVerticalLine(this._ctx, x, 0, this._height)
+    renderVerticalLine(this._ctx, x, 0, this._height)
   }
 
   _drawTickLines (yAxisOptions) {
     const tickLine = yAxisOptions.tickLine
-    if (!tickLine.display) {
+    if (!tickLine.show) {
       return
     }
     this._ctx.lineWidth = tickLine.size
@@ -66,52 +69,52 @@ export default class YAxisView extends View {
     let endX
     if (this._isDrawFromStart(yAxisOptions)) {
       startX = 0
-      if (yAxisOptions.axisLine.display) {
+      if (yAxisOptions.axisLine.show) {
         startX += yAxisOptions.axisLine.size
       }
       endX = startX + tickLineLength
     } else {
       startX = this._width
-      if (yAxisOptions.axisLine.display) {
+      if (yAxisOptions.axisLine.show) {
         startX -= yAxisOptions.axisLine.size
       }
       endX = startX - tickLineLength
     }
     this._yAxis.ticks().forEach(tick => {
-      drawHorizontalLine(this._ctx, tick.y, startX, endX)
+      renderHorizontalLine(this._ctx, tick.y, startX, endX)
     })
   }
 
   _drawTickLabels (yAxisOptions) {
     const tickText = yAxisOptions.tickText
-    if (!tickText.display) {
+    if (!tickText.show) {
       return
     }
     const tickLine = yAxisOptions.tickLine
-    const tickLineDisplay = tickLine.display
+    const tickLineShow = tickLine.show
     const tickLineLength = tickLine.length
     let labelX
     if (this._isDrawFromStart(yAxisOptions)) {
       labelX = tickText.paddingLeft
-      if (yAxisOptions.axisLine.display) {
+      if (yAxisOptions.axisLine.show) {
         labelX += yAxisOptions.axisLine.size
       }
-      if (tickLineDisplay) {
+      if (tickLineShow) {
         labelX += tickLineLength
       }
       this._ctx.textAlign = 'left'
     } else {
       labelX = this._width - tickText.paddingRight
-      if (yAxisOptions.axisLine.display) {
+      if (yAxisOptions.axisLine.show) {
         labelX -= yAxisOptions.axisLine.size
       }
-      if (tickLineDisplay) {
+      if (tickLineShow) {
         labelX -= tickLineLength
       }
       this._ctx.textAlign = 'right'
     }
     this._ctx.textBaseline = 'middle'
-    this._ctx.font = getFont(tickText.size, tickText.weight, tickText.family)
+    this._ctx.font = createFont(tickText.size, tickText.weight, tickText.family)
     this._ctx.fillStyle = tickText.color
     this._yAxis.ticks().forEach(tick => {
       this._ctx.fillText(tick.v, labelX, tick.y)
@@ -125,51 +128,52 @@ export default class YAxisView extends View {
    * @private
    */
   _drawTechnicalIndicatorLastValue (yAxisOptions) {
-    const technicalIndicatorStyleOptions = this._chartData.styleOptions().technicalIndicator
-    const lastValueMarkStyleOptions = technicalIndicatorStyleOptions.lastValueMark
-    const technicalIndicator = this._additionalDataProvider.technicalIndicator()
-    const technicalIndicatorResult = technicalIndicator.result
-    const dataSize = technicalIndicatorResult.length
-    const technicalIndicatorData = technicalIndicatorResult[dataSize - 1]
-    if (!lastValueMarkStyleOptions.display || !technicalIndicatorData) {
+    const technicalIndicatorOptions = this._chartData.styleOptions().technicalIndicator
+    const lastValueMarkOptions = technicalIndicatorOptions.lastValueMark
+    const technicalIndicators = this._additionalDataProvider.technicalIndicators()
+    if (!lastValueMarkOptions.show || !lastValueMarkOptions.text.show) {
       return
     }
     const dataList = this._chartData.dataList()
-    const plots = technicalIndicator.plots
-    const cbData = {
-      preData: { kLineData: dataList[dataSize - 2], technicalIndicatorData: technicalIndicatorResult[dataSize - 2] },
-      currentData: { kLineData: dataList[dataSize - 1], technicalIndicatorData }
-    }
-    const precision = technicalIndicator.precision
-    const colors = technicalIndicatorStyleOptions.line.colors || []
-    const colorSize = colors.length
-    let lineCount = 0
-    plots.forEach(plot => {
-      const value = technicalIndicatorData[plot.key]
-      let backgroundColor
-      switch (plot.type) {
-        case PlotType.CIRCLE: {
-          backgroundColor = (plot.color && plot.color(cbData, technicalIndicatorStyleOptions)) || technicalIndicatorStyleOptions.circle.noChangeColor
-          break
-        }
-        case PlotType.BAR: {
-          backgroundColor = (plot.color && plot.color(cbData, technicalIndicatorStyleOptions)) || technicalIndicatorStyleOptions.bar.noChangeColor
-          break
-        }
-        default: {
-          backgroundColor = colors[lineCount % colorSize]
-          lineCount++
-        }
+    technicalIndicators.forEach(technicalIndicator => {
+      const technicalIndicatorResult = technicalIndicator.result || []
+      const dataSize = technicalIndicatorResult.length
+      const technicalIndicatorData = technicalIndicatorResult[dataSize - 1] || {}
+      const plots = technicalIndicator.plots
+      const cbData = {
+        preData: { kLineData: dataList[dataSize - 2], technicalIndicatorData: technicalIndicatorResult[dataSize - 2] },
+        currentData: { kLineData: dataList[dataSize - 1], technicalIndicatorData }
       }
-      if (isValid(value)) {
-        this._drawMarkLabel(
-          yAxisOptions, value, precision,
-          lastValueMarkStyleOptions.textSize, lastValueMarkStyleOptions.textWeight,
-          lastValueMarkStyleOptions.textFamily, lastValueMarkStyleOptions.textColor, backgroundColor,
-          lastValueMarkStyleOptions.textPaddingLeft, lastValueMarkStyleOptions.textPaddingTop,
-          lastValueMarkStyleOptions.textPaddingRight, lastValueMarkStyleOptions.textPaddingBottom
-        )
-      }
+      const precision = technicalIndicator.precision
+      const colors = technicalIndicatorOptions.line.colors || []
+      const colorSize = colors.length
+      let lineCount = 0
+      plots.forEach(plot => {
+        const value = technicalIndicatorData[plot.key]
+        let backgroundColor
+        switch (plot.type) {
+          case PlotType.CIRCLE: {
+            backgroundColor = (plot.color && plot.color(cbData, technicalIndicatorOptions)) || technicalIndicatorOptions.circle.noChangeColor
+            break
+          }
+          case PlotType.BAR: {
+            backgroundColor = (plot.color && plot.color(cbData, technicalIndicatorOptions)) || technicalIndicatorOptions.bar.noChangeColor
+            break
+          }
+          default: {
+            backgroundColor = colors[lineCount % colorSize]
+            lineCount++
+          }
+        }
+        if (isValid(value)) {
+          this._drawMarkLabel(
+            yAxisOptions, value, precision, technicalIndicator.shouldFormatBigNumber,
+            {
+              ...lastValueMarkOptions.text, backgroundColor
+            }
+          )
+        }
+      })
     })
   }
 
@@ -178,34 +182,34 @@ export default class YAxisView extends View {
    * @private
    */
   _drawLastPriceLabel (yAxisOptions) {
-    if (!this._yAxis.isCandleStickYAxis()) {
+    if (!this._yAxis.isCandleYAxis()) {
       return
     }
-    const priceMark = this._chartData.styleOptions().candleStick.priceMark
-    const lastPriceMark = priceMark.last
+    const priceMarkOptions = this._chartData.styleOptions().candle.priceMark
+    const lastPriceMarkOptions = priceMarkOptions.last
+    if (!priceMarkOptions.show || !lastPriceMarkOptions.show || !lastPriceMarkOptions.text.show) {
+      return
+    }
     const dataList = this._chartData.dataList()
-    const dataSize = dataList.length
-    if (!priceMark.display || !lastPriceMark.display || !lastPriceMark.text.display || dataSize === 0) {
+    const kLineData = dataList.last()
+    if (!kLineData) {
       return
     }
-    const kLineData = dataList[dataSize - 1]
     const close = kLineData.close
     const open = kLineData.open
     let backgroundColor
     if (close > open) {
-      backgroundColor = lastPriceMark.upColor
+      backgroundColor = lastPriceMarkOptions.upColor
     } else if (close < open) {
-      backgroundColor = lastPriceMark.downColor
+      backgroundColor = lastPriceMarkOptions.downColor
     } else {
-      backgroundColor = lastPriceMark.noChangeColor
+      backgroundColor = lastPriceMarkOptions.noChangeColor
     }
-    const priceMarkText = lastPriceMark.text
     this._drawMarkLabel(
-      yAxisOptions, close, this._chartData.pricePrecision(),
-      priceMarkText.size, priceMarkText.weight, priceMarkText.family,
-      priceMarkText.color, backgroundColor,
-      priceMarkText.paddingLeft, priceMarkText.paddingTop,
-      priceMarkText.paddingRight, priceMarkText.paddingBottom
+      yAxisOptions, close, this._chartData.pricePrecision(), false,
+      {
+        ...lastPriceMarkOptions.text, backgroundColor
+      }
     )
   }
 
@@ -214,20 +218,24 @@ export default class YAxisView extends View {
    * @param yAxisOptions
    * @param value
    * @param precision
-   * @param textSize
-   * @param textWeight
-   * @param textFamily
-   * @param textColor
+   * @param shouldFormatBigNumber
+   * @param size
+   * @param weight
+   * @param family
+   * @param color
    * @param backgroundColor
-   * @param textPaddingLeft
-   * @param textPaddingTop
-   * @param textPaddingRight
-   * @param textPaddingBottom
+   * @param paddingLeft
+   * @param paddingTop
+   * @param paddingRight
+   * @param paddingBottom
    * @private
    */
   _drawMarkLabel (
-    yAxisOptions, value, precision, textSize, textWeight, textFamily, textColor, backgroundColor,
-    textPaddingLeft, textPaddingTop, textPaddingRight, textPaddingBottom
+    yAxisOptions, value, precision, shouldFormatBigNumber,
+    {
+      size, weight, family, color, backgroundColor,
+      paddingLeft, paddingTop, paddingRight, paddingBottom
+    }
   ) {
     let valueY = this._yAxis.convertToPixel(value)
     valueY = +(Math.max(this._height * 0.05, Math.min(valueY, this._height * 0.98))).toFixed(0)
@@ -237,24 +245,25 @@ export default class YAxisView extends View {
       text = `${((value - fromClose) / fromClose * 100).toFixed(2)}%`
     } else {
       text = formatPrecision(value, precision)
-      if (this._additionalDataProvider.technicalIndicator().shouldFormatBigNumber) {
+      if (shouldFormatBigNumber) {
         text = formatBigNumber(text)
       }
     }
-    this._ctx.font = getFont(textSize, textWeight, textFamily)
-    const rectWidth = calcTextWidth(this._ctx, text) + textPaddingLeft + textPaddingRight
-    const rectHeight = textPaddingTop + textSize + textPaddingBottom
+    this._ctx.font = createFont(size, weight, family)
+    const rectWidth = calcTextWidth(this._ctx, text) + paddingLeft + paddingRight
+    const rectHeight = paddingTop + size + paddingBottom
     let rectStartX
     if (this._isDrawFromStart(yAxisOptions)) {
       rectStartX = 0
     } else {
       rectStartX = this._width - rectWidth
     }
-    this._ctx.fillStyle = backgroundColor
-    this._ctx.fillRect(rectStartX, valueY - textPaddingTop - textSize / 2, rectWidth, rectHeight)
-    this._ctx.fillStyle = textColor
+    renderFillRect(
+      this._ctx, backgroundColor,
+      rectStartX, valueY - paddingTop - size / 2, rectWidth, rectHeight
+    )
     this._ctx.textBaseline = 'middle'
-    this._ctx.fillText(text, rectStartX + textPaddingLeft, valueY)
+    renderText(this._ctx, color, rectStartX + paddingLeft, valueY, text)
   }
 
   /**

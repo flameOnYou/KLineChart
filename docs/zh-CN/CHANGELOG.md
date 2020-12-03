@@ -1,5 +1,36 @@
 # 版本日志
 
+## 6.0.0
+`2020-11-29`
++ 🎨 全新的样式配置
+    + 👉 所有`display`变更为`show`。
+    + 👉 `candelStick`变更为`candle`。
+    + 👉 `candleStick.bar.style`变更为`candle.type`。
+    + 👉 `realTime`变更为`candle.area`。
+    + 👉 `floatLayer.prompt.candleStick`变更为`candle.tooltip`。
+    + 👉 `floatLayer.prompt.technicalIndicator`变更为`technicalIndicator.tooltip`。
+    + 👉 `floatLayer.crossHair`变更为`crosshair`。
++ 🔧 全新的API
+    + 👉 `createTechnicalIndicator`变更为`createPane`。
+    + 👉 `setPrecision`变更为`setPriceVolumePrecision`。
+    + 💪 `setTechnicalIndicatorType`和`removeTechnicalIndicator`新增参数，增强功能。
+    + 🆕 新增`getTechnicalIndicatorType`。
+    + 🗑 删除`setCandleStickChartType`。
+    + 🗑 删除`setCandleStickTechnicalIndicatorType`。
++ 🆕 主图和附图支持设置多个技术指标类型。
++ 💄 优化初始化方法`init`错误参数提示。
++ 🐞 修复技术指标提示名字和值之间的间隙不对问题。
+
+
+## 5.7.0
+`2020-11-13`
++ 🛠 重构标记图形模块。
++ 🆕 配置项`realTime.timeLine.areaFillColor`支持渐变。
++ 🆕 `subscribeDrawAction`方法回调参数`data`里新增`dataIndex`。
++ 🆕 新增方法`setZoomEnabled`和`isZoomEnabled`，`setScrollEnabled`和`isScrollEnabled`。
++ 💄 优化y轴数值很小时图表显示。
+
+
 ## 5.6.0
 `2020-08-29`
 + 🆕 自定义技术指标新增`render`属性。

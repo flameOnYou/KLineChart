@@ -1,5 +1,36 @@
 # Change Log
 
+## 6.0.0
+`2020-11-29`
++ 🎨 New style configuration
+    + 👉 All `display` is changed to `show`.
+    + 👉 `candelStick` is changed to `candle`.
+    + 👉 `candleStick.bar.style` is changed to `candle.type`.
+    + 👉 `realTime` is changed to `candle.area`.
+    + 👉 `floatLayer.prompt.candleStick` is changed to `candle.tooltip`.
+    + 👉 `floatLayer.prompt.technicalIndicator` is changed to `technicalIndicator.tooltip`.
+    + 👉 `floatLayer.crossHair` is changed to `crosshair`.
++ 🔧 New API
+    + 👉 `createTechnicalIndicator` is changed to `createPane`.
+    + 👉 `setPrecision` is changed to `setPriceVolumePrecision`.
+    + 💪 `setTechnicalIndicatorType` and `removeTechnicalIndicator` added new parameters and enhanced functions.
+    + 🆕 Add `getTechnicalIndicatorType`.
+    + 🗑 Remove `setCandleStickChartType`.
+    + 🗑 Remove `setCandleStickTechnicalIndicatorType`.
++ 🆕 The main picture and the picture support the setting of multiple technical indicator types.
++ 💄 Optimize initialization method `init` error parameter prompt.
++ 🐞 Fix the problem that the gap between the name and value of the technical indicator prompt is incorrect.
+
+
+## 5.7.0
+`2020-11-13`
++ 🛠 Refactor marking graphics module.
++ 🆕 Configuration item `realTime.timeLine.areaFillColor` supports gradient.
++ 🆕 Add `dataIndex` in the callback parameter `data` of the `subscribeDrawAction` method.
++ 🆕 Add api `setZoomEnabled` and `isZoomEnabled`, `setScrollEnabled` and `isScrollEnabled`.
++ 💄 Optimize the chart display of the y-axis value very small.
+
+
 ## 5.6.0
 `2020-08-29`
 + 🆕 Add `render` property for custom technical indicators.
