@@ -25,7 +25,8 @@ import {
   PRICE_LINE,
   PRICE_CHANNEL_LINE,
   PARALLEL_STRAIGHT_LINE,
-  FIBONACCI_LINE
+  FIBONACCI_LINE,
+  RECTANGLE_LINE
 } from './defaultGraphicMarkType'
 
 import HorizontalStraightLine from './HorizontalStraightLine'
@@ -41,6 +42,7 @@ import PriceLine from './PriceLine'
 import ParallelStraightLine from './ParallelStraightLine'
 import PriceChannelLine from './PriceChannelLine'
 import FibonacciLine from './FibonacciLine'
+import RectangleLine from './RectangleLine'
 
 /**
  * 创建图形标记映射
@@ -60,6 +62,7 @@ export function createGraphicMarkMapping () {
     [PRICE_LINE]: PriceLine,
     [PRICE_CHANNEL_LINE]: PriceChannelLine,
     [PARALLEL_STRAIGHT_LINE]: ParallelStraightLine,
-    [FIBONACCI_LINE]: FibonacciLine
+    [FIBONACCI_LINE]: FibonacciLine,
+    [RECTANGLE_LINE]: RectangleLine
   }
 }
