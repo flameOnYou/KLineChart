@@ -860,6 +860,32 @@ export default class ChartImp implements Chart {
             shouldLayout = true
             const state = options.state
             switch (state) {
+              case 'submaximize': {
+                const totalHeight = this._chartBounding.height
+                const candleHeight = this._candlePane.getBounding().height
+                const xAxisHeight = this._xAxisPane.getBounding().height
+                const separatorSize = this.getStyles().separator.size
+                const subPanes = this._drawPanes.filter(p => p.getId() !== PaneIdConstants.CANDLE && p.getId() !== PaneIdConstants.X_AXIS)
+                const targetPane = subPanes.find(p => p.getId() === currentPaneId)
+                const otherPanes = subPanes.filter(p => p.getId() !== currentPaneId)
+                const remainHeight = totalHeight - candleHeight - xAxisHeight - separatorSize * (subPanes.length - 1)
+                const maxHeight = remainHeight - PANE_MIN_HEIGHT * (otherPanes.length)
+                if (targetPane != null) {
+                  targetPane.setBounding({ height: maxHeight })
+                  targetPane.setOptions({ state })
+                }
+                otherPanes.forEach(p => {
+                  p.setBounding({ height: PANE_MIN_HEIGHT })
+                  p.setOptions({ state: 'minimize' })
+                })
+                this._drawPanes.forEach(pane => {
+                  if (pane.getId() !== PaneIdConstants.X_AXIS) {
+                    pane.setVisible(true)
+                    this._separatorPanes.get(pane)?.setVisible(true)
+                  }
+                })
+                break
+              }
               case 'maximize': {
                 const maximizePane = this._drawPanes.find(pane => {
                   const paneId = pane.getId()

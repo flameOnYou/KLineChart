@@ -14,7 +14,7 @@
 
 import type { AxisCreate } from '../component/Axis'
 
-export type PaneState = 'normal' | 'maximize' | 'minimize'
+export type PaneState = 'normal' | 'maximize' | 'minimize' | 'submaximize'
 
 export interface PaneOptions {
   id?: string
